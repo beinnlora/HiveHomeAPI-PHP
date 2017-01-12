@@ -1,6 +1,6 @@
 <?PHP
 
-/*
+/*GH 
  Copyright (C) Stephen Wilson (steve@stevewilson.it).
  
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,7 +67,7 @@ class HiveHome {
 		$url = "/auth/sessions";
 		//build body
 		$auth = array("username"=>$this->username,"password"=>$this->password);
-		$authbody = json_encode("sessions"=>$auth);
+		$authbody = json_encode(array("sessions"=>$auth));
 		list($headers, $body) = $this->curlPOST($url,$authbody ,"" );
 		//$this->username.":".$this->password
 		
@@ -345,7 +345,7 @@ class HiveHomeNode {
 	public $nodeid;
 	public $nodehref;
 	public $nodelinks;
-	public $nodename
+	public $nodename;
 	public $nodetype;
 	public $nodeattributes;
 
