@@ -59,7 +59,7 @@ class HiveHome {
 	
 		/**
 	 *  This is where the users credentials are authenticated.
-	 *  The Apple_MMe_Host and Apple_MMe_Scope values are saved and used to generate the URL for all subsequent API calls
+	 *  The sessionId is saved and used in subsequent calls
 	 */
 	private function authenticate() {
 		$url = "https://fmipmobile.icloud.com/fmipservice/device/".$this->username."/initClient";
@@ -304,7 +304,7 @@ HTML;
 	}
 }
 
-
+/*
 class FindMyiPhoneDevice {
 	public $ID;
 	public $batteryLevel;
@@ -317,7 +317,7 @@ class FindMyiPhoneDevice {
 	public $name;
 	public $API;
 }
-
+*/
 
 class FindMyiPhoneLocation {
 	public $timestamp;
@@ -325,4 +325,21 @@ class FindMyiPhoneLocation {
 	public $positionType;
 	public $longitude;
 	public $latitude;
+}
+
+class HiveHomeInstance {
+	public $responsemeta;
+	public $responselinks;
+	public $responselinked;
+	public $responsenodes;
+}
+class HiveHomeNode {
+	public $nodeid;
+	public $nodehref;
+	public $nodelinks;
+	public $nodename
+	public $nodetype;
+	public $nodeattributes;
+	
+
 }
