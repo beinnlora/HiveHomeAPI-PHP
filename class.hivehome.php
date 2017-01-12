@@ -25,11 +25,12 @@
 class HiveHome {
 
 	private $client = array(
-						//"app-version" => "1.0",
-						//"user-agent" => "HiveHome/001 Network/001 Network/1.0.0",
+						/*"app-version" => "1.0",
+						//"user-agent" => "HiveHome/001 Network/001 Network/1.0.0",*/
+						"baseurl" => "https://api-prod.bgchprod.info:443/omnia",
 						"headers" => array(
-							"Content-Type" => " application/vnd.alertme.zoo-6.1+jso",
-							"Accept: "applicatoin/vnd.alertme.zoo-6.1+json",
+							"Content-Type" => "application/vnd.alertme.zoo-6.1+jso",
+							"Accept" =>"application/vnd.alertme.zoo-6.1+json",
 							"X-Omnia-Client" => "Hive Web Dashboard"
 
 							
@@ -39,7 +40,7 @@ class HiveHome {
 	private $username;
 	private $password;
 	private $sessionId; //returned from the login call
-	public $devices = array();
+	//public $devices = array();
 	
 	/**
      * This is where you initialize HiveHome with your Hive credentials
@@ -61,13 +62,83 @@ class HiveHome {
 	 *  This is where the users credentials are authenticated.
 	 *  The sessionId is saved and used in subsequent calls
 	 */
+	 
 	private function authenticate() {
-		$url = "https://fmipmobile.icloud.com/fmipservice/device/".$this->username."/initClient";
-		list($headers, $body) = $this->curlPOST($url, "", $this->username.":".$this->password);
+		$url = "/auth/sessions";
+		//build body
+		$auth = array("username"=>$this->username,"password"=>$this->password);
+		$authbody = json_encode("sessions"=>$auth);
+		list($headers, $body) = $this->curlPOST($url,$authbody ,"" );
+		//$this->username.":".$this->password
 		
 		if ($headers["http_code"] == 401) {
 			throw new Exception('Your iCloud username and/or password are invalid');
 		}
+	}
+	
+	/**
+	 * Helper method for making POST requests
+	 */
+	private function curlPOST($url, $body, $authentication = "") {
+		$ch = curl_init($this->client["baseurl"].$url);                                                                      
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $body);                                                                  
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_VERBOSE, 1);
+		curl_setopt($ch, CURLOPT_HEADER, 1);
+		curl_setopt($ch, CURLOPT_USERAGENT, $this->client["user-agent"]);
+		if (strlen($authentication) > 0) {
+			curl_setopt($ch, CURLOPT_USERPWD, $authentication);  
+		}
+		$arrHeaders = array();
+		$arrHeaders["Content-Length"] = strlen($request);
+		foreach ($this->client["headers"] as $key=>$value) {
+			array_push($arrHeaders, $key.": ".$value);
+		}
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $arrHeaders);
+		$response = curl_exec($ch);
+		$info = curl_getinfo($ch);
+		$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+		$responseBody = substr($response, $header_size);
+		$headers = array();
+		foreach (explode("\r\n", substr($response, 0, $header_size)) as $i => $line) {
+			if ($i === 0)
+            	$headers['http_code'] = $info["http_code"];
+			else {
+            	list ($key, $value) = explode(': ', $line);
+            	if (strlen($key) > 0)
+	            	$headers[$key] = $value;
+			}
+        }
+        if ($this->debug) {
+        	$debugURL = htmlentities($url);
+        	$debugRequestBody = htmlentities(print_r(json_decode($body, true), true));
+        	$debugHeaders = htmlentities(print_r($headers, true));
+        	$debugResponseBody = htmlentities(print_r(json_decode($responseBody, true), true));
+        	print <<<HTML
+        		<PRE>
+        		<TABLE BORDER="1" CELLPADDING="3">
+        			<TR>
+        				<TD VALIGN="top"><B>URL</B></TD>
+        				<TD VALIGN="top">$debugURL</TD>
+        			</TR>
+        			<TR>
+        				<TD VALIGN="top"><B>Request Body</B></TD>
+        				<TD VALIGN="top"><PRE>$debugRequestBody</PRE></TD>
+        			</TR>
+        			<TR>
+        				<TD VALIGN="top"><B>Response Headers</B></TD>
+        				<TD VALIGN="top"><PRE>$debugHeaders</PRE></TD>
+        			</TR>
+        			<TR>
+        				<TD VALIGN="top"><B>Response Body</B></TD>
+        				<TD VALIGN="top"><PRE>$debugResponseBody</PRE></TD>
+        			</TR>
+        		</TABLE>
+        		</PRE>
+HTML;
+        }
+		return array($headers, json_decode($responseBody, true));
 	}
 	
 	/**
@@ -238,70 +309,7 @@ TABLEFOOTER;
 		}
 	}
 	
-	/**
-	 * Helper method for making POST requests
-	 */
-	private function curlPOST($url, $body, $authentication = "") {
-		$ch = curl_init($url);                                                                      
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $body);                                                                  
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_VERBOSE, 1);
-		curl_setopt($ch, CURLOPT_HEADER, 1);
-		curl_setopt($ch, CURLOPT_USERAGENT, $this->client["user-agent"]);
-		if (strlen($authentication) > 0) {
-			curl_setopt($ch, CURLOPT_USERPWD, $authentication);  
-		}
-		$arrHeaders = array();
-		$arrHeaders["Content-Length"] = strlen($request);
-		foreach ($this->client["headers"] as $key=>$value) {
-			array_push($arrHeaders, $key.": ".$value);
-		}
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $arrHeaders);
-		$response = curl_exec($ch);
-		$info = curl_getinfo($ch);
-		$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-		$responseBody = substr($response, $header_size);
-		$headers = array();
-		foreach (explode("\r\n", substr($response, 0, $header_size)) as $i => $line) {
-			if ($i === 0)
-            	$headers['http_code'] = $info["http_code"];
-			else {
-            	list ($key, $value) = explode(': ', $line);
-            	if (strlen($key) > 0)
-	            	$headers[$key] = $value;
-			}
-        }
-        if ($this->debug) {
-        	$debugURL = htmlentities($url);
-        	$debugRequestBody = htmlentities(print_r(json_decode($body, true), true));
-        	$debugHeaders = htmlentities(print_r($headers, true));
-        	$debugResponseBody = htmlentities(print_r(json_decode($responseBody, true), true));
-        	print <<<HTML
-        		<PRE>
-        		<TABLE BORDER="1" CELLPADDING="3">
-        			<TR>
-        				<TD VALIGN="top"><B>URL</B></TD>
-        				<TD VALIGN="top">$debugURL</TD>
-        			</TR>
-        			<TR>
-        				<TD VALIGN="top"><B>Request Body</B></TD>
-        				<TD VALIGN="top"><PRE>$debugRequestBody</PRE></TD>
-        			</TR>
-        			<TR>
-        				<TD VALIGN="top"><B>Response Headers</B></TD>
-        				<TD VALIGN="top"><PRE>$debugHeaders</PRE></TD>
-        			</TR>
-        			<TR>
-        				<TD VALIGN="top"><B>Response Body</B></TD>
-        				<TD VALIGN="top"><PRE>$debugResponseBody</PRE></TD>
-        			</TR>
-        		</TABLE>
-        		</PRE>
-HTML;
-        }
-		return array($headers, json_decode($responseBody, true));
-	}
+	
 }
 
 /*
@@ -340,6 +348,8 @@ class HiveHomeNode {
 	public $nodename
 	public $nodetype;
 	public $nodeattributes;
-	
 
+}
+class HiveHomeChannel {
+	
 }
