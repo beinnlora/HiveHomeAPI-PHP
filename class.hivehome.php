@@ -22,10 +22,7 @@ http://www.smartofthehome.com/2016/05/hive-rest-api-v6/
 * Inefficient at the moment as discovery of receiverID is not recycled
 
 */
-//******************
-//when live , uncomment out the below line, so that the only item that is printed is the temperature value.
-//******************
-//error_reporting(0);
+
 
 class HiveHome
 {
@@ -45,11 +42,12 @@ class HiveHome
 	 * @param debug        (Optional) Set to TRUE and all the API requests and responses will be printed out
 	 * @return          HiveHome object instance 
 	 */
-	public function __construct($username, $password, $debug = true)
+	public function __construct($username, $password, $debug = false)
 	{
 		$this->username  = $username;
 		$this->password  = $password;
 		$this->debug     = $debug;
+		if (!$debug) {error_reporting(0);}
 		$this->sessionId = $this->authenticate();
 	}
 	/**
