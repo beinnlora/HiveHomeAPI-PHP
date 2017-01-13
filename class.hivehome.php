@@ -191,7 +191,7 @@ HTML;
         }
         if ($this->debug) {
         	$debugURL = htmlentities($url);
-        	$debugRequestBody = htmlentities(print_r(json_decode($body, true), true));
+        	//$debugRequestBody = htmlentities(print_r(json_decode($body, true), true));
         	$debugHeaders = htmlentities(print_r($headers, true));
         	$debugResponseBody = htmlentities(print_r(json_decode($responseBody, true), true));
         	print <<<HTML
@@ -201,10 +201,7 @@ HTML;
         				<TD VALIGN="top"><B>URL</B></TD>
         				<TD VALIGN="top">$debugURL</TD>
         			</TR>
-        			<TR>
-        				<TD VALIGN="top"><B>Request Body</B></TD>
-        				<TD VALIGN="top"><PRE>$debugRequestBody</PRE></TD>
-        			</TR>
+        			
         			<TR>
         				<TD VALIGN="top"><B>Response Headers</B></TD>
         				<TD VALIGN="top"><PRE>$debugHeaders</PRE></TD>
@@ -229,14 +226,109 @@ HTML;
 	 * */
 		public function getNodes() {
 		
-		print "********";
-		print "getNodes   /r/n";
+		//print "********";
+		//print "getNodes "."\n";;
 		
 		$url = "/nodes";
 		//no body to send, but we receive a body
 		list($headers, $body) = $this->curlGET($url,$this->sessionId );
 		//$this->username.":".$this->password
-		print $body;
+		//print $body;
+		
+		
+		
+		//$this->$sessionId = ($body["sessions"][0]["sessionId"]);
+		
+		
+		if ($headers["http_code"] == 401) {
+			throw new Exception('Your errpr');
+		}
+		//return $body["sessions"][0]["sessionId"];
+	return $body;
+	
+	
+	}
+	
+	
+			public function getCurrentTemperature() {
+		
+//print "********"."\n";
+		//print "getCurrentTemperature"."\n";
+		
+		
+		
+		$nodelist = $this->getNodes();
+		$node_id = "";
+		$counter = 0;
+		$actualTemp = "";
+		//print "size: ".sizeof($nodelist)."\n";
+		foreach ($nodelist as $onenode) {
+			foreach ($onenode as $myitem){
+			//print $nodelist["nodes"][$counter]["attributes"]["schedule"]."\n";
+			//print "count: ".count($nodelist["nodes"][$counter]["attributes"]["schedule"])."\n";
+			
+			//print "counter:".$counter."\n";
+			//print ("Receiver node name:".$nodelist["nodes"][$counter]["name"]."\n");
+			$target = $nodelist["nodes"][$counter]["attributes"]["targetHeatTemperature"];
+			//print ("sizeof target: ".sizeof($target)."\n");
+			
+			if (sizeof($target)>0){
+				$node_id = $nodelist["nodes"][$counter]["id"];
+				
+				//print "FOUND!"."\n";
+				//print ("Receiver node name:".$nodelist["nodes"][$counter]["name"]."\n");
+				//print ("Receiver node id: ".$node_id."\n");
+				//print ("Target: ".$nodelist["nodes"][$counter]["attributes"]["targetHeatTemperature"]["displayValue"]."\n");
+				//print ("Actual: ".$nodelist["nodes"][$counter]["attributes"]["temperature"]["displayValue"]."\n");
+				$actualTemp = $nodelist["nodes"][$counter]["attributes"]["temperature"]["displayValue"];
+				//print ("Receiver nodetype: ".$nodelist["nodes"][$counter]["nodeType"]."\n");
+			}
+		$counter++;
+		}
+	}
+		
+		
+		
+		if ($headers["http_code"] == 401) {
+			throw new Exception('Your errpr');
+		}
+		//return $body["sessions"][0]["sessionId"];
+	if (sizeof($node_id)>0){
+		//print "getting current temp"."\n";
+		return $actualTemp;
+	} else {
+		return "";
+	}
+	
+	
+	}
+	
+	
+	public function getChannels() {
+		
+		print "********";
+		print "getChannels   \r\n";
+		
+		//$url = "/nodes";
+		$url = "/channels";
+		//no body to send, but we receive a body
+		list($headers, $body) = $this->curlGET($url,$this->sessionId );
+		//$this->username.":".$this->password
+		//print $body;
+		//cycle through node array, looking for RECEIVER
+		$currentTemp = "";
+		$counter=0;
+	
+	/*	foreach ($body  as $obj) {
+		
+		foreach ($obj  as $layer) {
+		print $layer;
+		foreach ($layer  as $layer2) {
+			print $layer2;
+		}
+		}
+	}*/
+		
 		
 		
 		
@@ -251,10 +343,6 @@ HTML;
 	
 	
 	}
-	
-	
-	
-	
 	
 	
 	
