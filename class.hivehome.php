@@ -1,6 +1,6 @@
 <?PHP
 
-/*GH 
+/*GH
  Copyright (C) Stephen Wilson (steve@stevewilson.it).
  
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ class HiveHome {
 						//"user-agent" => "HiveHome/001 Network/001 Network/1.0.0",*/
 						"baseurl" => "https://api-prod.bgchprod.info:443/omnia",
 						"headers" => array(
-							"Content-Type" => "application/vnd.alertme.zoo-6.1+jso",
+							"Content-Type" => "application/vnd.alertme.zoo-6.1+json",
 							"Accept" =>"application/vnd.alertme.zoo-6.1+json",
 							"X-Omnia-Client" => "Hive Web Dashboard"
 
@@ -51,11 +51,12 @@ class HiveHome {
      * @param debug		(Optional) Set to TRUE and all the API requests and responses will be printed out
      * @return          HiveHome object instance 
      */
+     
 	public function __construct($username, $password, $debug = true) {
 		$this->username = $username;
 		$this->password = $password;
 		$this->debug = $debug;
-		$this->authenticate();
+		$this->sessionId = $this->authenticate();
 	}
 	
 		/**
@@ -63,30 +64,36 @@ class HiveHome {
 	 *  The sessionId is saved and used in subsequent calls
 	 */
 	 
+	 
 	private function authenticate() {
 		$url = "/auth/sessions";
 		//build body
 		$auth = array("username"=>$this->username,"password"=>$this->password);
-		$authbody = json_encode(array("sessions"=>$auth));
+		$authbody = json_encode(array("sessions"=>array($auth)));
 		list($headers, $body) = $this->curlPOST($url,$authbody ,"" );
 		//$this->username.":".$this->password
+		//$res = print_r(json_decode($body, true));
+		
+		//$this->$sessionId = ($body["sessions"][0]["sessionId"]);
+		
 		
 		if ($headers["http_code"] == 401) {
 			throw new Exception('Your iCloud username and/or password are invalid');
 		}
+		return $body["sessions"][0]["sessionId"];
 	}
 	
 	/**
 	 * Helper method for making POST requests
 	 */
-	private function curlPOST($url, $body, $authentication = "") {
+	private function curlPOST($url, $body, $sid = "") {
 		$ch = curl_init($this->client["baseurl"].$url);                                                                      
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $body);                                                                  
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_VERBOSE, 1);
 		curl_setopt($ch, CURLOPT_HEADER, 1);
-		curl_setopt($ch, CURLOPT_USERAGENT, $this->client["user-agent"]);
+		//curl_setopt($ch, CURLOPT_USERAGENT, $this->client["user-agent"]);
 		if (strlen($authentication) > 0) {
 			curl_setopt($ch, CURLOPT_USERPWD, $authentication);  
 		}
@@ -94,6 +101,10 @@ class HiveHome {
 		$arrHeaders["Content-Length"] = strlen($request);
 		foreach ($this->client["headers"] as $key=>$value) {
 			array_push($arrHeaders, $key.": ".$value);
+		}
+		//add sessionId if passed
+		if (strlen($sid) > 0) {
+			array_push($arrHeaders, "X-Omnia-Access-Token".": ".$sid);
 		}
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $arrHeaders);
 		$response = curl_exec($ch);
@@ -140,6 +151,112 @@ HTML;
         }
 		return array($headers, json_decode($responseBody, true));
 	}
+	
+	
+	/*** **/
+	private function curlGET($url, $sid = "") {
+		$ch = curl_init($this->client["baseurl"].$url);                                                                      
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");                                                                     
+		//curl_setopt($ch, CURLOPT_POSTFIELDS, $body);                                                                  
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_VERBOSE, 1);
+		curl_setopt($ch, CURLOPT_HEADER, 1);
+		//curl_setopt($ch, CURLOPT_USERAGENT, $this->client["user-agent"]);
+	//	if (strlen($authentication) > 0) {
+		//	curl_setopt($ch, CURLOPT_USERPWD, $authentication);  
+		//}
+		$arrHeaders = array();
+		$arrHeaders["Content-Length"] = strlen($request);
+		foreach ($this->client["headers"] as $key=>$value) {
+			array_push($arrHeaders, $key.": ".$value);
+		}
+		//add sessionId if passed
+		if (strlen($sid) > 0) {
+			array_push($arrHeaders, "X-Omnia-Access-Token".": ".$sid);
+		}
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $arrHeaders);
+		$response = curl_exec($ch);
+		$info = curl_getinfo($ch);
+		$header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+		$responseBody = substr($response, $header_size);
+		$headers = array();
+		foreach (explode("\r\n", substr($response, 0, $header_size)) as $i => $line) {
+			if ($i === 0)
+            	$headers['http_code'] = $info["http_code"];
+			else {
+            	list ($key, $value) = explode(': ', $line);
+            	if (strlen($key) > 0)
+	            	$headers[$key] = $value;
+			}
+        }
+        if ($this->debug) {
+        	$debugURL = htmlentities($url);
+        	$debugRequestBody = htmlentities(print_r(json_decode($body, true), true));
+        	$debugHeaders = htmlentities(print_r($headers, true));
+        	$debugResponseBody = htmlentities(print_r(json_decode($responseBody, true), true));
+        	print <<<HTML
+        		<PRE>
+        		<TABLE BORDER="1" CELLPADDING="3">
+        			<TR>
+        				<TD VALIGN="top"><B>URL</B></TD>
+        				<TD VALIGN="top">$debugURL</TD>
+        			</TR>
+        			<TR>
+        				<TD VALIGN="top"><B>Request Body</B></TD>
+        				<TD VALIGN="top"><PRE>$debugRequestBody</PRE></TD>
+        			</TR>
+        			<TR>
+        				<TD VALIGN="top"><B>Response Headers</B></TD>
+        				<TD VALIGN="top"><PRE>$debugHeaders</PRE></TD>
+        			</TR>
+        			<TR>
+        				<TD VALIGN="top"><B>Response Body</B></TD>
+        				<TD VALIGN="top"><PRE>$debugResponseBody</PRE></TD>
+        			</TR>
+        		</TABLE>
+        		</PRE>
+HTML;
+        }
+		return array($headers, json_decode($responseBody, true));
+	}
+	/*** **/
+	
+	
+	
+	
+	/* this method just lists devices (nodes)
+	 * GET /nodes
+	 * */
+		public function getNodes() {
+		
+		print "********";
+		print "getNodes   /r/n";
+		
+		$url = "/nodes";
+		//no body to send, but we receive a body
+		list($headers, $body) = $this->curlGET($url,$this->sessionId );
+		//$this->username.":".$this->password
+		print $body;
+		
+		
+		
+		//$this->$sessionId = ($body["sessions"][0]["sessionId"]);
+		
+		
+		if ($headers["http_code"] == 401) {
+			throw new Exception('Your errpr');
+		}
+		//return $body["sessions"][0]["sessionId"];
+	
+	
+	
+	}
+	
+	
+	
+	
+	
+	
 	
 	/**
      * This method attempts to get the most current location of a device
