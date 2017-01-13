@@ -1,6 +1,11 @@
 <?php
-/*example code - replace your credentials below with your hivehome details
+/*example code - replace your credentials below with your hivehome details*/
 	include ("class.hivehome.php");
-	$hive = new HiveHome("hiveusername", "hivepw");
-	$hive->printTemperature();
+	//create new HiveHome object, debugging false
+	$hive = new HiveHome("hiveusername", "hivepw",false);
+	print "Target Temperature: ".$hive->getTargetTemperature()."\n";
+	print "Actual Temperature: ".$hive->getCurrentTemperature()."\n";
+	print "Boiler Status (heater): ".$hive->getHeaterState()."\n";
+	
+	
 ?>
