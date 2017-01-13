@@ -22,6 +22,11 @@ http://www.smartofthehome.com/2016/05/hive-rest-api-v6/
 * Inefficient at the moment as discovery of receiverID is not recycled
 
 */
+//******************
+//when live , uncomment out the below line, so that the only item that is printed is the temperature value.
+//******************
+//error_reporting(0);
+
 class HiveHome
 {
 	private $client = array( /*"app-version" => "1.0",
