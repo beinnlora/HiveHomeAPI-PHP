@@ -274,6 +274,9 @@ HTML;
         foreach ($nodelist as $onenode) {
             foreach ($onenode as $myitem) {
                 //print ("Receiver node name:".$nodelist["nodes"][$counter]["name"]."\n");
+                //TWO RECEIVERS in a heating/hot water system.
+                //one for heating, that will have targetHeatTemperature
+                //one for hot water, that will have ["attributes"]"["supportsHotWater"] = 1
                 $target = $nodelist["nodes"][$counter]["attributes"]["targetHeatTemperature"];
                 
                 if (sizeof($target) > 0) {
@@ -582,6 +585,56 @@ TABLEFOOTER;
         $device->name                         = $device->API["name"];
         return $device;
     }
+    private function createHome($nodes)
+    {
+		//function to populate a basic HiveHomeBlob from a /GET/nodes request
+		
+		
+		/*class HiveHomeNode
+{
+    public $nodeid;
+    public $nodehref;
+    public $nodelinks;
+    public $nodename;
+    public $nodetype;
+    public $nodeattributes;
+    
+}
+class HiveHomeChannel
+{
+    
+}
+class HiveHomeBlob
+{
+	public $nodeList;		// /GET /nodes response json array
+	public $hubNode;		// whole json node of hub (type HiveHomeNode)
+	
+	public $heatingNode;
+	
+	public $hotWaterNode;	
+	
+	*/
+		$house = new HiveHomeHouse();
+		$house->nodeList										= $nodes; //entire nodelist for the house
+		$house->hubNode											= new HiveHomeNode;
+		$house->hubNode->nodeid									= ; //parse $nodes to isolate which one is which
+		$house->hubNode->nodename								=;
+		$house->hubNode->nodeattributes							= new HiveHomeNodeAttributes;
+		$house->hubNode->nodeattributes->attributes				= ;//whole array of attributes
+		/*	public attributes;				//whole array of all attributes, in case we miss some
+	public stateHotWaterRelay;
+	public targetHeatTemperature;
+	public supportsHotWater;
+	public temperature;
+	public stateHeatingRelay;
+	public stateHotWaterRelay;*/
+		$house->hubNode->nodeattributes->stateHotWaterRelay
+		$house->hubNode->nodeattributes->targetHeatTemperature
+		$house->hubNode->nodeattributes->supportsHotWater
+		$house->hubNode->nodeattributes->temperature
+		$house->hubNode->nodeattributes->stateHeatingRelay
+		$house->hubNode->nodeattributes->stateHotWaterRelay
+	}
     
     /**
      * This method refreshes the list of devices on the users iCloud account
@@ -641,18 +694,80 @@ class HiveHomeInstance
     public $responselinked;
     public $responsenodes;
 }
-class HiveHomeNode
-{
-    public $nodeid;
-    public $nodehref;
-    public $nodelinks;
-    public $nodename;
-    public $nodetype;
-    public $nodeattributes;
-    
-}
+
 class HiveHomeChannel
 {
     
 }
+class HiveHomeHouse	//our specific hive home installation, split into specific nodes
+{
+	public $nodeList;		// /GET /nodes response json array
+	public $hubNode;		// whole json node of hub (type HiveHomeNode)
+	public $heatingNode;
+	public $hotWaterNode;
+	//public static synthetic
+	
+	//CONSTRUCTOR method
+	public function __construct($nodes)
+		
+		$this->nodeList = $nodes;
+		$this->hubNode = new HiveHomeNode($nodes,"hub");
+		$this->heatingNode = new HiveHomeNode($nodes,"heating");
+		$this->hotWaterNode = new HiveHomeNode($nodes,"water");
+		//synthetic?
+	//store entire node array into the house
+	//$
+	
+	
+}
+class HiveHomeNode
+{
+    public $node;			//whole json array of node
+    public $nodeid;			//id of node
+    public $nodehref;		
+    public $nodelinks;
+    public $nodename;		//name of node (Receiver, hub etc)
+    public $nodetype;
+    public $nodeattributes;	//array of attributes
+    
+ 
+ 
+    //not quite right above - when do we tell it it is a HiveHomeNode
+    //CONSTRUCTOR
+    public function __construct($nodes,$devicetype) //hub//heating//water
+		//parse all info in $nodes and return just the node of the specified device type
+	
+	$this->node									=; //just the node we want after parsing
+	$this->nodeid								=;//extract nodeID and store here
+	$this->nodehref
+	$this->nodelinks
+	$this->nodename
+	$this->nodetype
+	$this->nodeattributes			= new HiveHomeNodeAttributes($this->node, $devicetype);//pass it the node specific to that device, and also the devicetype
+	
+    
+}
+class HiveHomeNodeAttributes
+{
+	//which attributes do we care about across all possible types of devices
+	public attributes;				//whole array of all attributes, in case we miss some
+	public stateHotWaterRelay;
+	public targetHeatTemperature;
+	public supportsHotWater;
+	public temperature;
+	public stateHeatingRelay;
+	public stateHotWaterRelay;
+	
+	public function __construct($node, $devicetype) //heating//hotwater{
+		//parse the node and extract individual items as required depending on the device type
+		//
+		$this->attributes - ;//parse the single node of ths device and store the attributes as an array
+		$this->stateHotWaterRelay = ;
+		$this->targetHeatTemperature=;
+		$this->supportsHotWater
+		$this->stateHeatingRelay
+		$this->stateHotWaterRelay
+	}
+}
+
 
