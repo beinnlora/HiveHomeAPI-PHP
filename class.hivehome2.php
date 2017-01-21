@@ -22,6 +22,9 @@ http://www.smartofthehome.com/2016/05/hive-rest-api-v6/
 * 0.1 first draft 
 * 0.2 getTemperature
 * 0.3 get state of the heater (whether boiler is running or not) - transform into your required value using the calling php
+* 0.2.3  Forked from class.hivehome (should really learn how to do that in github)
+* this version DOES NOT WORK - go and use class.hivehome until this one is fixed.
+
 
 */
 
