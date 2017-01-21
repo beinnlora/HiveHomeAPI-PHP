@@ -24,10 +24,12 @@ It's a PHP helper class around the v6 REST API for Hive products - AlertMe produ
 What things can I do with this code?
 ====================================
 
-Currently you can't do anything. I want it to:
+Currently you can
 - Get the current temperature and setpoint
-- boost heating and hotwater
 - tell me when the boiler is firing or not
+
+ I want it to:
+- boost heating and hotwater
 - turn the system onto holiday mode
 
 all from the command line, so I can interface to it easily through OpenHAB
